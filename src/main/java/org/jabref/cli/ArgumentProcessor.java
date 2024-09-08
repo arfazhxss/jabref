@@ -1,6 +1,7 @@
 package org.jabref.cli;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -14,6 +15,7 @@ import java.util.prefs.BackingStoreException;
 
 import org.jabref.gui.externalfiles.AutoSetFileLinksUtil;
 import org.jabref.gui.undo.NamedCompound;
+import org.jabref.gui.util.CurrentThreadTaskExecutor;
 import org.jabref.logic.JabRefException;
 import org.jabref.logic.UiCommand;
 import org.jabref.logic.bibtex.FieldPreferences;
@@ -41,7 +43,6 @@ import org.jabref.logic.journals.JournalAbbreviationRepository;
 import org.jabref.logic.l10n.Localization;
 import org.jabref.logic.net.URLDownload;
 import org.jabref.logic.search.DatabaseSearcher;
-import org.jabref.logic.search.SearchQuery;
 import org.jabref.logic.shared.prefs.SharedDatabasePreferences;
 import org.jabref.logic.util.OS;
 import org.jabref.logic.util.io.FileUtil;
@@ -51,6 +52,7 @@ import org.jabref.model.database.BibDatabaseContext;
 import org.jabref.model.database.BibDatabaseMode;
 import org.jabref.model.entry.BibEntry;
 import org.jabref.model.entry.BibEntryTypesManager;
+import org.jabref.model.search.SearchQuery;
 import org.jabref.model.strings.StringUtil;
 import org.jabref.model.util.DummyFileUpdateMonitor;
 import org.jabref.model.util.FileUpdateMonitor;
@@ -133,7 +135,7 @@ public class ArgumentProcessor {
             // Download web resource to temporary file
             try {
                 file = new URLDownload(address).toTemporaryFile();
-            } catch (IOException e) {
+            } catch (FetcherException | MalformedURLException e) {
                 System.err.println(Localization.lang("Problem downloading from %1", address) + e.getLocalizedMessage());
                 return Optional.empty();
             }
@@ -239,22 +241,22 @@ public class ArgumentProcessor {
             automaticallySetFileLinks(loaded);
         }
 
-        if ((cli.isWriteXMPtoPdf() && cli.isEmbeddBibfileInPdf()) || (cli.isWriteMetadatatoPdf() && (cli.isWriteXMPtoPdf() || cli.isEmbeddBibfileInPdf()))) {
-            System.err.println("Give only one of [writeXMPtoPdf, embeddBibfileInPdf, writeMetadatatoPdf]");
+        if ((cli.isWriteXmpToPdf() && cli.isEmbedBibFileInPdf()) || (cli.isWriteMetadataToPdf() && (cli.isWriteXmpToPdf() || cli.isEmbedBibFileInPdf()))) {
+            System.err.println("Give only one of [writeXmpToPdf, embedBibFileInPdf, writeMetadataToPdf]");
         }
 
-        if (cli.isWriteMetadatatoPdf() || cli.isWriteXMPtoPdf() || cli.isEmbeddBibfileInPdf()) {
+        if (cli.isWriteMetadataToPdf() || cli.isWriteXmpToPdf() || cli.isEmbedBibFileInPdf()) {
             if (!loaded.isEmpty()) {
                 writeMetadataToPdf(loaded,
-                        cli.getWriteMetadatatoPdf(),
+                        cli.getWriteMetadataToPdf(),
                         preferencesService.getXmpPreferences(),
                         preferencesService.getFilePreferences(),
                         preferencesService.getLibraryPreferences().getDefaultBibDatabaseMode(),
                         Injector.instantiateModelOrService(BibEntryTypesManager.class),
                         preferencesService.getFieldPreferences(),
                         Injector.instantiateModelOrService(JournalAbbreviationRepository.class),
-                        cli.isWriteXMPtoPdf() || cli.isWriteMetadatatoPdf(),
-                        cli.isEmbeddBibfileInPdf() || cli.isWriteMetadatatoPdf());
+                        cli.isWriteXmpToPdf() || cli.isWriteMetadataToPdf(),
+                        cli.isEmbedBibFileInPdf() || cli.isWriteMetadataToPdf());
             }
         }
 
@@ -379,7 +381,7 @@ public class ArgumentProcessor {
                 if (embeddedBibFilePdfExporter.exportToAllFilesOfEntry(databaseContext, filePreferences, entry, List.of(entry), abbreviationRepository)) {
                     System.out.printf("Successfully embedded metadata on at least one linked file of %s%n", citeKey);
                 } else {
-                    System.out.printf("Cannot embedd metadata on any linked files of %s. Make sure there is at least one linked file and the path is correct.%n", citeKey);
+                    System.out.printf("Cannot embed metadata on any linked files of %s. Make sure there is at least one linked file and the path is correct.%n", citeKey);
                 }
             }
         } catch (Exception e) {
@@ -453,11 +455,17 @@ public class ArgumentProcessor {
         // $ stands for a blank
         ParserResult pr = loaded.getLast();
         BibDatabaseContext databaseContext = pr.getDatabaseContext();
-        BibDatabase dataBase = pr.getDatabase();
 
         SearchPreferences searchPreferences = preferencesService.getSearchPreferences();
         SearchQuery query = new SearchQuery(searchTerm, searchPreferences.getSearchFlags());
-        List<BibEntry> matches = new DatabaseSearcher(query, dataBase).getMatches();
+
+        List<BibEntry> matches;
+        try {
+            matches = new DatabaseSearcher(query, databaseContext, new CurrentThreadTaskExecutor(), preferencesService.getFilePreferences()).getMatches();
+        } catch (IOException e) {
+            LOGGER.error("Error occurred when searching", e);
+            return false;
+        }
 
         // export matches
         if (!matches.isEmpty()) {

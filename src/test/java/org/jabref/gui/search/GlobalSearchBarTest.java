@@ -3,6 +3,7 @@ package org.jabref.gui.search;
 import java.util.EnumSet;
 import java.util.List;
 
+import javafx.collections.FXCollections;
 import javafx.scene.Scene;
 import javafx.scene.control.TextInputControl;
 import javafx.scene.layout.HBox;
@@ -15,7 +16,7 @@ import org.jabref.gui.keyboard.KeyBindingRepository;
 import org.jabref.gui.undo.CountingUndoManager;
 import org.jabref.gui.util.UiTaskExecutor;
 import org.jabref.model.database.BibDatabaseContext;
-import org.jabref.model.search.rules.SearchRules;
+import org.jabref.model.search.SearchFlags;
 import org.jabref.preferences.PreferencesService;
 import org.jabref.preferences.SearchPreferences;
 import org.jabref.testutils.category.GUITest;
@@ -43,7 +44,8 @@ public class GlobalSearchBarTest {
     @Start
     public void onStart(Stage stage) {
         SearchPreferences searchPreferences = mock(SearchPreferences.class);
-        when(searchPreferences.getSearchFlags()).thenReturn(EnumSet.noneOf(SearchRules.SearchFlags.class));
+        when(searchPreferences.getSearchFlags()).thenReturn(EnumSet.noneOf(SearchFlags.class));
+        when(searchPreferences.getObservableSearchFlags()).thenReturn(FXCollections.observableSet());
         PreferencesService prefs = mock(PreferencesService.class, Answers.RETURNS_DEEP_STUBS);
         when(prefs.getSearchPreferences()).thenReturn(searchPreferences);
 
