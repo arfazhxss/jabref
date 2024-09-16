@@ -15,22 +15,18 @@ import org.jabref.gui.preferences.PreferencesTab;
 import org.jabref.gui.util.ViewModelListCellFactory;
 import org.jabref.logic.help.HelpFile;
 import org.jabref.logic.l10n.Localization;
-import org.jabref.preferences.ai.AiApiKeyProvider;
-import org.jabref.preferences.ai.AiProvider;
-import org.jabref.preferences.ai.EmbeddingModel;
+import org.jabref.model.ai.AiProvider;
+import org.jabref.model.ai.EmbeddingModel;
 
 import com.airhacks.afterburner.views.ViewLoader;
 import com.dlsc.gemsfx.ResizableTextArea;
 import com.dlsc.unitfx.IntegerInputField;
 import de.saxsys.mvvmfx.utils.validation.visualization.ControlsFxVisualizer;
-import jakarta.inject.Inject;
 import org.controlsfx.control.SearchableComboBox;
 import org.controlsfx.control.textfield.CustomPasswordField;
 
 public class AiTab extends AbstractPreferenceTabView<AiTabViewModel> implements PreferencesTab {
     private static final String HUGGING_FACE_CHAT_MODEL_PROMPT = "TinyLlama/TinyLlama_v1.1 (or any other model name)";
-
-    @Inject private AiApiKeyProvider aiApiKeyProvider;
 
     @FXML private CheckBox enableAi;
 
@@ -73,7 +69,7 @@ public class AiTab extends AbstractPreferenceTabView<AiTabViewModel> implements 
     }
 
     public void initialize() {
-        this.viewModel = new AiTabViewModel(preferencesService, aiApiKeyProvider);
+        this.viewModel = new AiTabViewModel(preferences);
 
         enableAi.selectedProperty().bindBidirectional(viewModel.enableAi());
 
@@ -189,19 +185,19 @@ public class AiTab extends AbstractPreferenceTabView<AiTabViewModel> implements 
         });
 
         ActionFactory actionFactory = new ActionFactory();
-        actionFactory.configureIconButton(StandardActions.HELP, new HelpAction(HelpFile.AI_ENABLE, dialogService, preferencesService.getFilePreferences()), enableAiHelp);
-        actionFactory.configureIconButton(StandardActions.HELP, new HelpAction(HelpFile.AI_PROVIDER, dialogService, preferencesService.getFilePreferences()), aiProviderHelp);
-        actionFactory.configureIconButton(StandardActions.HELP, new HelpAction(HelpFile.AI_CHAT_MODEL, dialogService, preferencesService.getFilePreferences()), chatModelHelp);
-        actionFactory.configureIconButton(StandardActions.HELP, new HelpAction(HelpFile.AI_API_KEY, dialogService, preferencesService.getFilePreferences()), apiKeyHelp);
-        actionFactory.configureIconButton(StandardActions.HELP, new HelpAction(HelpFile.AI_EMBEDDING_MODEL, dialogService, preferencesService.getFilePreferences()), embeddingModelHelp);
-        actionFactory.configureIconButton(StandardActions.HELP, new HelpAction(HelpFile.AI_API_BASE_URL, dialogService, preferencesService.getFilePreferences()), apiBaseUrlHelp);
-        actionFactory.configureIconButton(StandardActions.HELP, new HelpAction(HelpFile.AI_INSTRUCTION, dialogService, preferencesService.getFilePreferences()), instructionHelp);
-        actionFactory.configureIconButton(StandardActions.HELP, new HelpAction(HelpFile.AI_CONTEXT_WINDOW_SIZE, dialogService, preferencesService.getFilePreferences()), contextWindowSizeHelp);
-        actionFactory.configureIconButton(StandardActions.HELP, new HelpAction(HelpFile.AI_TEMPERATURE, dialogService, preferencesService.getFilePreferences()), temperatureHelp);
-        actionFactory.configureIconButton(StandardActions.HELP, new HelpAction(HelpFile.AI_DOCUMENT_SPLITTER_CHUNK_SIZE, dialogService, preferencesService.getFilePreferences()), documentSplitterChunkSizeHelp);
-        actionFactory.configureIconButton(StandardActions.HELP, new HelpAction(HelpFile.AI_DOCUMENT_SPLITTER_OVERLAP_SIZE, dialogService, preferencesService.getFilePreferences()), documentSplitterOverlapSizeHelp);
-        actionFactory.configureIconButton(StandardActions.HELP, new HelpAction(HelpFile.AI_RAG_MAX_RESULTS_COUNT, dialogService, preferencesService.getFilePreferences()), ragMaxResultsCountHelp);
-        actionFactory.configureIconButton(StandardActions.HELP, new HelpAction(HelpFile.AI_RAG_MIN_SCORE, dialogService, preferencesService.getFilePreferences()), ragMinScoreHelp);
+        actionFactory.configureIconButton(StandardActions.HELP, new HelpAction(HelpFile.AI_ENABLE, dialogService, preferences.getExternalApplicationsPreferences()), enableAiHelp);
+        actionFactory.configureIconButton(StandardActions.HELP, new HelpAction(HelpFile.AI_PROVIDER, dialogService, preferences.getExternalApplicationsPreferences()), aiProviderHelp);
+        actionFactory.configureIconButton(StandardActions.HELP, new HelpAction(HelpFile.AI_CHAT_MODEL, dialogService, preferences.getExternalApplicationsPreferences()), chatModelHelp);
+        actionFactory.configureIconButton(StandardActions.HELP, new HelpAction(HelpFile.AI_API_KEY, dialogService, preferences.getExternalApplicationsPreferences()), apiKeyHelp);
+        actionFactory.configureIconButton(StandardActions.HELP, new HelpAction(HelpFile.AI_EMBEDDING_MODEL, dialogService, preferences.getExternalApplicationsPreferences()), embeddingModelHelp);
+        actionFactory.configureIconButton(StandardActions.HELP, new HelpAction(HelpFile.AI_API_BASE_URL, dialogService, preferences.getExternalApplicationsPreferences()), apiBaseUrlHelp);
+        actionFactory.configureIconButton(StandardActions.HELP, new HelpAction(HelpFile.AI_INSTRUCTION, dialogService, preferences.getExternalApplicationsPreferences()), instructionHelp);
+        actionFactory.configureIconButton(StandardActions.HELP, new HelpAction(HelpFile.AI_CONTEXT_WINDOW_SIZE, dialogService, preferences.getExternalApplicationsPreferences()), contextWindowSizeHelp);
+        actionFactory.configureIconButton(StandardActions.HELP, new HelpAction(HelpFile.AI_TEMPERATURE, dialogService, preferences.getExternalApplicationsPreferences()), temperatureHelp);
+        actionFactory.configureIconButton(StandardActions.HELP, new HelpAction(HelpFile.AI_DOCUMENT_SPLITTER_CHUNK_SIZE, dialogService, preferences.getExternalApplicationsPreferences()), documentSplitterChunkSizeHelp);
+        actionFactory.configureIconButton(StandardActions.HELP, new HelpAction(HelpFile.AI_DOCUMENT_SPLITTER_OVERLAP_SIZE, dialogService, preferences.getExternalApplicationsPreferences()), documentSplitterOverlapSizeHelp);
+        actionFactory.configureIconButton(StandardActions.HELP, new HelpAction(HelpFile.AI_RAG_MAX_RESULTS_COUNT, dialogService, preferences.getExternalApplicationsPreferences()), ragMaxResultsCountHelp);
+        actionFactory.configureIconButton(StandardActions.HELP, new HelpAction(HelpFile.AI_RAG_MIN_SCORE, dialogService, preferences.getExternalApplicationsPreferences()), ragMinScoreHelp);
     }
 
     @Override

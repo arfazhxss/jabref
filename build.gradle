@@ -30,6 +30,8 @@ plugins {
     id 'idea'
 
     id 'org.openrewrite.rewrite' version '6.20.0'
+
+    id "org.itsallcode.openfasttrace" version "3.0.0"
 }
 
 // Enable following for debugging
@@ -236,7 +238,7 @@ dependencies {
     }
     implementation 'org.fxmisc.flowless:flowless:0.7.3'
     implementation 'org.fxmisc.richtext:richtextfx:0.11.3'
-    implementation (group: 'com.dlsc.gemsfx', name: 'gemsfx', version: '2.43.0') {
+    implementation (group: 'com.dlsc.gemsfx', name: 'gemsfx', version: '2.48.0') {
         exclude module: 'javax.inject' // Split package, use only jakarta.inject
         exclude module: 'commons-lang3'
         exclude group: 'org.apache.commons.validator'
@@ -323,20 +325,21 @@ dependencies {
     implementation 'com.github.vatbub:mslinks:1.0.6.2'
 
     // YAML formatting
-    implementation 'org.yaml:snakeyaml:2.2'
+    implementation 'org.yaml:snakeyaml:2.3'
 
     // AI
-    implementation 'dev.langchain4j:langchain4j:0.33.0'
+    implementation 'dev.langchain4j:langchain4j:0.34.0'
     // Even though we use jvm-openai for LLM connection, we still need this package for tokenization.
-    implementation('dev.langchain4j:langchain4j-open-ai:0.33.0') {
+    implementation('dev.langchain4j:langchain4j-open-ai:0.34.0') {
         exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk8'
     }
-    implementation('dev.langchain4j:langchain4j-mistral-ai:0.33.0')
-    implementation('dev.langchain4j:langchain4j-hugging-face:0.33.0')
+    implementation('dev.langchain4j:langchain4j-mistral-ai:0.34.0')
+    implementation('dev.langchain4j:langchain4j-google-ai-gemini:0.34.0')
+    implementation('dev.langchain4j:langchain4j-hugging-face:0.34.0')
     implementation 'ai.djl:api:0.29.0'
     implementation 'ai.djl.pytorch:pytorch-model-zoo:0.29.0'
     implementation 'ai.djl.huggingface:tokenizers:0.29.0'
-    implementation 'io.github.stefanbratanov:jvm-openai:0.10.0'
+    implementation 'io.github.stefanbratanov:jvm-openai:0.11.0'
     // openai depends on okhttp, which needs kotlin - see https://github.com/square/okhttp/issues/5299 for details
     implementation ('com.squareup.okhttp3:okhttp:4.12.0') {
         exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk8'
@@ -367,7 +370,7 @@ dependencies {
     xjc group: 'org.glassfish.jaxb', name: 'jaxb-xjc', version: '3.0.2'
     xjc group: 'org.glassfish.jaxb', name: 'jaxb-runtime', version: '3.0.2'
 
-    rewrite(platform("org.openrewrite.recipe:rewrite-recipe-bom:2.17.0"))
+    rewrite(platform("org.openrewrite.recipe:rewrite-recipe-bom:2.18.0"))
     rewrite("org.openrewrite.recipe:rewrite-static-analysis")
     rewrite("org.openrewrite.recipe:rewrite-logging-frameworks")
     rewrite("org.openrewrite.recipe:rewrite-testing-frameworks")
@@ -776,6 +779,7 @@ jlink {
         uses 'org.eclipse.jgit.transport.SshSessionFactory'
         uses 'org.eclipse.jgit.lib.GpgSigner'
         uses 'kong.unirest.core.json.JsonEngine';
+        uses 'ai.djl.repository.zoo.ZooProvider';
         provides 'org.mariadb.jdbc.tls.TlsSocketPlugin' with 'org.mariadb.jdbc.internal.protocol.tls.DefaultTlsSocketPlugin'
         provides 'java.sql.Driver' with 'org.postgresql.Driver'
         provides 'org.mariadb.jdbc.authentication.AuthenticationPlugin' with 'org.mariadb.jdbc.internal.com.send.authentication.CachingSha2PasswordPlugin',
@@ -792,7 +796,10 @@ jlink {
         provides 'java.security.Provider' with 'org.bouncycastle.jce.provider.BouncyCastleProvider',
                 'org.bouncycastle.pqc.jcajce.provider.BouncyCastlePQCProvider'
         provides 'kong.unirest.core.json.JsonEngine' with 'kong.unirest.modules.gson.GsonEngine';
-
+        provides 'ai.djl.repository.zoo.ZooProvider' with 'ai.djl.engine.rust.zoo.RsZooProvider',
+                'ai.djl.huggingface.zoo.HfZooProvider',
+                'ai.djl.pytorch.zoo.PtZooProvider',
+                'ai.djl.repository.zoo.DefaultZooProvider';
     }
 
     jpackage {
@@ -897,4 +904,8 @@ jmh {
     warmupIterations = 5
     iterations = 10
     fork = 2
+}
+
+requirementTracing {
+    inputDirectories = files('docs', 'src/main/java', 'src/test/java')
 }

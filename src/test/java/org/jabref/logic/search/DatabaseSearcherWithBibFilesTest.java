@@ -8,12 +8,13 @@ import java.util.stream.Stream;
 
 import javafx.beans.property.SimpleBooleanProperty;
 
-import org.jabref.gui.util.CurrentThreadTaskExecutor;
-import org.jabref.gui.util.TaskExecutor;
+import org.jabref.logic.FilePreferences;
 import org.jabref.logic.importer.ImportFormatPreferences;
 import org.jabref.logic.importer.ParserResult;
 import org.jabref.logic.importer.fileformat.BibtexImporter;
+import org.jabref.logic.util.CurrentThreadTaskExecutor;
 import org.jabref.logic.util.StandardFileType;
+import org.jabref.logic.util.TaskExecutor;
 import org.jabref.model.database.BibDatabaseContext;
 import org.jabref.model.entry.BibEntry;
 import org.jabref.model.entry.LinkedFile;
@@ -22,7 +23,6 @@ import org.jabref.model.entry.types.StandardEntryType;
 import org.jabref.model.search.SearchFlags;
 import org.jabref.model.search.SearchQuery;
 import org.jabref.model.util.DummyFileUpdateMonitor;
-import org.jabref.preferences.FilePreferences;
 
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.io.TempDir;
@@ -33,6 +33,7 @@ import org.mockito.Answers;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
 class DatabaseSearcherWithBibFilesTest {
@@ -77,7 +78,8 @@ class DatabaseSearcherWithBibFilesTest {
 
     private BibDatabaseContext initializeDatabaseFromPath(Path testFile) throws Exception {
         ParserResult result = new BibtexImporter(mock(ImportFormatPreferences.class, Answers.RETURNS_DEEP_STUBS), new DummyFileUpdateMonitor()).importDatabase(testFile);
-        BibDatabaseContext databaseContext = result.getDatabaseContext();
+        BibDatabaseContext databaseContext = spy(result.getDatabaseContext());
+        when(databaseContext.getFulltextIndexPath()).thenReturn(indexDir);
 
         when(filePreferences.shouldFulltextIndexLinkedFiles()).thenReturn(true);
         when(filePreferences.fulltextIndexLinkedFilesProperty()).thenReturn(new SimpleBooleanProperty(true));
