@@ -1,6 +1,7 @@
 package org.jabref.gui.preferences.ai;
 
 import javafx.application.Platform;
+import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
@@ -29,6 +30,8 @@ public class AiTab extends AbstractPreferenceTabView<AiTabViewModel> implements 
     private static final String HUGGING_FACE_CHAT_MODEL_PROMPT = "TinyLlama/TinyLlama_v1.1 (or any other model name)";
 
     @FXML private CheckBox enableAi;
+    @FXML private CheckBox autoGenerateEmbeddings;
+    @FXML private CheckBox autoGenerateSummaries;
 
     @FXML private ComboBox<AiProvider> aiProviderComboBox;
     @FXML private ComboBox<String> chatModelComboBox;
@@ -46,19 +49,8 @@ public class AiTab extends AbstractPreferenceTabView<AiTabViewModel> implements 
     @FXML private IntegerInputField ragMaxResultsCountTextField;
     @FXML private TextField ragMinScoreTextField;
 
-    @FXML private Button enableAiHelp;
-    @FXML private Button aiProviderHelp;
-    @FXML private Button chatModelHelp;
-    @FXML private Button apiKeyHelp;
-    @FXML private Button apiBaseUrlHelp;
-    @FXML private Button embeddingModelHelp;
-    @FXML private Button instructionHelp;
-    @FXML private Button contextWindowSizeHelp;
-    @FXML private Button temperatureHelp;
-    @FXML private Button documentSplitterChunkSizeHelp;
-    @FXML private Button documentSplitterOverlapSizeHelp;
-    @FXML private Button ragMaxResultsCountHelp;
-    @FXML private Button ragMinScoreHelp;
+    @FXML private Button generalSettingsHelp;
+    @FXML private Button expertSettingsHelp;
 
     private final ControlsFxVisualizer visualizer = new ControlsFxVisualizer();
 
@@ -72,6 +64,10 @@ public class AiTab extends AbstractPreferenceTabView<AiTabViewModel> implements 
         this.viewModel = new AiTabViewModel(preferences);
 
         enableAi.selectedProperty().bindBidirectional(viewModel.enableAi());
+        autoGenerateSummaries.selectedProperty().bindBidirectional(viewModel.autoGenerateSummaries());
+        autoGenerateSummaries.disableProperty().bind(viewModel.disableAutoGenerateSummaries());
+        autoGenerateEmbeddings.selectedProperty().bindBidirectional(viewModel.autoGenerateEmbeddings());
+        autoGenerateEmbeddings.disableProperty().bind(viewModel.disableAutoGenerateEmbeddings());
 
         new ViewModelListCellFactory<AiProvider>()
                 .withText(AiProvider::toString)
@@ -185,19 +181,8 @@ public class AiTab extends AbstractPreferenceTabView<AiTabViewModel> implements 
         });
 
         ActionFactory actionFactory = new ActionFactory();
-        actionFactory.configureIconButton(StandardActions.HELP, new HelpAction(HelpFile.AI_ENABLE, dialogService, preferences.getExternalApplicationsPreferences()), enableAiHelp);
-        actionFactory.configureIconButton(StandardActions.HELP, new HelpAction(HelpFile.AI_PROVIDER, dialogService, preferences.getExternalApplicationsPreferences()), aiProviderHelp);
-        actionFactory.configureIconButton(StandardActions.HELP, new HelpAction(HelpFile.AI_CHAT_MODEL, dialogService, preferences.getExternalApplicationsPreferences()), chatModelHelp);
-        actionFactory.configureIconButton(StandardActions.HELP, new HelpAction(HelpFile.AI_API_KEY, dialogService, preferences.getExternalApplicationsPreferences()), apiKeyHelp);
-        actionFactory.configureIconButton(StandardActions.HELP, new HelpAction(HelpFile.AI_EMBEDDING_MODEL, dialogService, preferences.getExternalApplicationsPreferences()), embeddingModelHelp);
-        actionFactory.configureIconButton(StandardActions.HELP, new HelpAction(HelpFile.AI_API_BASE_URL, dialogService, preferences.getExternalApplicationsPreferences()), apiBaseUrlHelp);
-        actionFactory.configureIconButton(StandardActions.HELP, new HelpAction(HelpFile.AI_INSTRUCTION, dialogService, preferences.getExternalApplicationsPreferences()), instructionHelp);
-        actionFactory.configureIconButton(StandardActions.HELP, new HelpAction(HelpFile.AI_CONTEXT_WINDOW_SIZE, dialogService, preferences.getExternalApplicationsPreferences()), contextWindowSizeHelp);
-        actionFactory.configureIconButton(StandardActions.HELP, new HelpAction(HelpFile.AI_TEMPERATURE, dialogService, preferences.getExternalApplicationsPreferences()), temperatureHelp);
-        actionFactory.configureIconButton(StandardActions.HELP, new HelpAction(HelpFile.AI_DOCUMENT_SPLITTER_CHUNK_SIZE, dialogService, preferences.getExternalApplicationsPreferences()), documentSplitterChunkSizeHelp);
-        actionFactory.configureIconButton(StandardActions.HELP, new HelpAction(HelpFile.AI_DOCUMENT_SPLITTER_OVERLAP_SIZE, dialogService, preferences.getExternalApplicationsPreferences()), documentSplitterOverlapSizeHelp);
-        actionFactory.configureIconButton(StandardActions.HELP, new HelpAction(HelpFile.AI_RAG_MAX_RESULTS_COUNT, dialogService, preferences.getExternalApplicationsPreferences()), ragMaxResultsCountHelp);
-        actionFactory.configureIconButton(StandardActions.HELP, new HelpAction(HelpFile.AI_RAG_MIN_SCORE, dialogService, preferences.getExternalApplicationsPreferences()), ragMinScoreHelp);
+        actionFactory.configureIconButton(StandardActions.HELP, new HelpAction(HelpFile.AI_GENERAL_SETTINGS, dialogService, preferences.getExternalApplicationsPreferences()), generalSettingsHelp);
+        actionFactory.configureIconButton(StandardActions.HELP, new HelpAction(HelpFile.AI_EXPERT_SETTINGS, dialogService, preferences.getExternalApplicationsPreferences()), expertSettingsHelp);
     }
 
     @Override
@@ -208,5 +193,9 @@ public class AiTab extends AbstractPreferenceTabView<AiTabViewModel> implements 
     @FXML
     private void onResetExpertSettingsButtonClick() {
         viewModel.resetExpertSettings();
+    }
+
+    public ReadOnlyBooleanProperty aiEnabledProperty() {
+        return enableAi.selectedProperty();
     }
 }

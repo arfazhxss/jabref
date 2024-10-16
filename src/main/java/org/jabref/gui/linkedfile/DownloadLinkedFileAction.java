@@ -10,10 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLHandshakeException;
-import javax.net.ssl.SSLSocketFactory;
 
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ReadOnlyDoubleProperty;
@@ -243,8 +240,6 @@ public class DownloadLinkedFileAction extends SimpleCommand {
     }
 
     private BackgroundTask<Path> prepareDownloadTask(Path targetDirectory, URLDownload urlDownload) {
-        SSLSocketFactory defaultSSLSocketFactory = HttpsURLConnection.getDefaultSSLSocketFactory();
-        HostnameVerifier defaultHostnameVerifier = HttpsURLConnection.getDefaultHostnameVerifier();
         return BackgroundTask
                 .wrap(() -> {
                     String suggestedName;
@@ -263,7 +258,6 @@ public class DownloadLinkedFileAction extends SimpleCommand {
                 .then(destination -> new FileDownloadTask(urlDownload.getSource(), destination))
                 .onFailure(ex -> LOGGER.error("Error in download", ex))
                 .onFinished(() -> {
-                    URLDownload.setSSLVerification(defaultSSLSocketFactory, defaultHostnameVerifier);
                     downloadProgress.unbind();
                     downloadProgress.set(1);
                 });
@@ -280,14 +274,11 @@ public class DownloadLinkedFileAction extends SimpleCommand {
     }
 
     private Optional<ExternalFileType> inferFileTypeFromMimeType(URLDownload urlDownload) {
-        String mimeType = urlDownload.getMimeType();
-
-        if (mimeType != null) {
-            LOGGER.debug("MIME Type suggested: {}", mimeType);
-            return ExternalFileTypes.getExternalFileTypeByMimeType(mimeType, externalApplicationsPreferences);
-        } else {
-            return Optional.empty();
-        }
+        return urlDownload.getMimeType()
+                          .flatMap(mimeType -> {
+                              LOGGER.debug("MIME Type suggested: {}", mimeType);
+                              return ExternalFileTypes.getExternalFileTypeByMimeType(mimeType, externalApplicationsPreferences);
+                          });
     }
 
     private Optional<ExternalFileType> inferFileTypeFromURL(String url) {
